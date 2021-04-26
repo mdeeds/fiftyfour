@@ -1,6 +1,6 @@
 import { Score } from "./score";
 import { Perf } from "./perf";
-import { Card } from "./card";
+import { Card } from "./cardStub";
 
 function constructorTest() {
     const startTime = Perf.now();
@@ -10,15 +10,13 @@ function constructorTest() {
 }
 
 function scoreTest() {
-    const body = document.getElementsByTagName('body')[0];
-
     var s: Score = new Score();
 
-    const card1 = new Card(Card.suits[0], 1, body);
-    const card2 = new Card(Card.suits[0], 10, body);
-    const card3 = new Card(Card.suits[0], 11, body);
-    const card4 = new Card(Card.suits[0], 12, body);
-    const card5 = new Card(Card.suits[0], 13, body);
+    const card1 = new Card(Card.suits[0], 1);
+    const card2 = new Card(Card.suits[0], 10);
+    const card3 = new Card(Card.suits[0], 11);
+    const card4 = new Card(Card.suits[0], 12);
+    const card5 = new Card(Card.suits[0], 13);
 
     var hand: Array<Card> = new Array<Card>();
     hand.push(card1);
@@ -28,7 +26,7 @@ function scoreTest() {
     hand.push(card5);
 
     const startTime = Perf.now();
-    let score = s.scoreHand(hand)
+    let score = s.scoreHand(hand);
     console.log(`Elapsed ms: ${Perf.now() - startTime}`);
 
     console.assert(score === 7462);

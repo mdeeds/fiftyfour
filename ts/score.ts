@@ -1,4 +1,4 @@
-import { Card } from "./card";
+import { Card } from "./cardStub";
 
 export class Score {
 
@@ -7,7 +7,7 @@ export class Score {
         this.GenerateScoreTable();
     }
 
-    public scoreHand(hand: Array<Card>) {
+    public scoreHand(hand: Array<Card>): number {
         let handString = "";
         let suit = hand[0].getSuit();
         let suited: boolean = true;
@@ -15,13 +15,15 @@ export class Score {
             if (card.getSuit() != suit) {
                 suited = false;
             }
-            handString += card.getSuit();
+            handString += card.getPip();
+            handString = handString.replace("10", "T");
         })
         if (suited) {
             handString += '+';
         }
         const sorted = handString.split('').sort().join('');
-        return this.scoreTable[sorted];
+        let score = this.scoreTable.get(sorted);
+        return score;
     }
 
     private GenerateScoreTable() {
