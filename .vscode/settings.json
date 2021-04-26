@@ -1,5 +1,11 @@
 {
+  "git.autofetch": true,
+  "diffEditor.ignoreTrimWhitespace": false,
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "window.zoomLevel": 0,
   "editor.rulers": [
     80
-  ]
+  ],
+  "editor.detectIndentation": false,
 }
