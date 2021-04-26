@@ -5,8 +5,11 @@ export type Suit = 'C' | 'D' | 'H' | 'S';
 export class VisibleCard implements Card {
   static suits: Suit[] = ['C', 'D', 'H', 'S'];
   static getPip(rank: number) {
+    if (rank < 2 || rank > 14) {
+      throw new Error(`Rank is out of range: ${rank}`);
+    }
     let pip = rank.toFixed(0);
-    if (rank === 1) {
+    if (rank === 14) {
       pip = 'A';
     } else if (rank === 10) {
       pip = 'T'
@@ -35,17 +38,10 @@ export class VisibleCard implements Card {
     container.appendChild(this.div);
   }
 
-  public getSuit() {
-    return this.suit;
-  }
-
-  public getPip() {
-  }
-
   private setFace() {
     this.div.classList.add('card');
     let pip = this.rank.toFixed(0);
-    if (this.rank === 1) {
+    if (this.rank === 14) {
       pip = 'A';
     } else if (this.rank === 11) {
       pip = 'J'

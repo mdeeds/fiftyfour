@@ -13,7 +13,7 @@ function constructorTest() {
 function scoreTest() {
   var s: Score = new Score();
 
-  const card1 = new CardStub('C', 1);
+  const card1 = new CardStub('C', 14);
   const card2 = new CardStub('C', 10);
   const card3 = new CardStub('C', 11);
   const card4 = new CardStub('C', 12);
