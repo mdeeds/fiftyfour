@@ -17,6 +17,24 @@ export class Card {
     container.appendChild(this.div);
   }
 
+  public getSuit() {
+    return this.suit;
+  }
+
+  public getPip() {
+    let pip = this.rank.toFixed(0);
+    if (this.rank === 1) {
+      pip = 'A';
+    } else if (this.rank === 11) {
+      pip = 'J'
+    } else if (this.rank === 12) {
+      pip = 'Q'
+    } else if (this.rank === 13) {
+      pip = 'K'
+    }
+    return pip;
+  }
+
   private setFace() {
     this.div.classList.add('card');
     let pip = this.rank.toFixed(0);
