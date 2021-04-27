@@ -86,6 +86,7 @@ export class HoldEm {
     while (needActions > 0) {
       let p = this.players[this.currentPlayerIndex];
       if (!p.isFolded) {
+        // ********** TODO: call model for the player and do stuff. ************
         console.log(`player Index ${this.currentPlayerIndex}. phase ${this.phase}`);
       }
       this.nextPlayer();
