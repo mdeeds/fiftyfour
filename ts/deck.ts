@@ -16,6 +16,10 @@ export class Deck<T> {
     return cards;
   }
 
+  getInDeck(){
+    return this.inDeck;
+  }
+
   constructor(content: T[]) {
     // Shallow copy of the content.
     this.inDeck = content.slice();
@@ -29,6 +33,12 @@ export class Deck<T> {
     }
     this.dealt.push(this.inDeck[i]);
     this.inDeck.slice(i, 1);
+  }
+
+  removeCards(cards: Array<T>) {
+    cards.forEach(c => {
+      this.remove(c);
+    })
   }
 
   shuffle() {
