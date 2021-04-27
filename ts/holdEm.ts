@@ -8,17 +8,25 @@ export type GamePhase = 'pre-flop' | 'flop' | 'turn' | 'river';
 export class HoldEm {
   private players: Array<Player> = new Array<Player>();
   private communityCards: Array<Card> = new Array<Card>();
+  private chipsInPot: number;
   private phase: GamePhase;
   private dealerIndex: number;
+  private currentPlayerIndex;
 
   constructor(buyIn: number, numberOfPlayers: number) {
     this.dealerIndex = 0;
+    this.currentPlayerIndex = 1;
+    this.chipsInPot = 0;
     this.phase = 'pre-flop';
     for (let i = 0; i < numberOfPlayers; i++) {
       var p: Player = new Player()
       p.chips = buyIn;
       this.players.push(p);
     }
+  }
+
+  private nextPlayer() {
+    this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
   }
 
   public getNumPlayers() {
@@ -45,20 +53,44 @@ export class HoldEm {
     this.showdown();
   }
 
+  private bet(playerIndex: number, amount: number) {
+    this.chipsInPot += amount;
+    this.players[playerIndex].chips -= amount;
+  }
+
   private dealHoleCards(deck: Deck<Card>) {
     this.players.forEach(p => {
       p.holeCards.push(deck.pop());
       p.holeCards.push(deck.pop());
     });
+    // small blind
+    this.bet(this.currentPlayerIndex, 1);
+    this.nextPlayer();
+    // big blind
+    this.bet(this.currentPlayerIndex, 2);
+    this.nextPlayer();
   }
 
   private Actions(deck: Deck<Card>) {
-
+    var playing = 0;
     this.players.forEach(p => {
       if (!p.isFolded) {
-
+        playing++;
       }
     });
+    if (playing <= 1) {
+      return;
+    }
+
+    var needActions = this.players.length;
+    while (needActions > 0) {
+      let p = this.players[this.currentPlayerIndex];
+      if (!p.isFolded) {
+        console.log(`player Index ${this.currentPlayerIndex}. phase ${this.phase}`);
+      }
+      this.nextPlayer();
+      needActions--;
+    }
   }
 
   private dealFlop(deck: Deck<Card>) {
@@ -78,6 +110,11 @@ export class HoldEm {
     this.players.forEach(p => {
       playerScores.push(s.bestHand(p.holeCards.concat(this.communityCards)));
     });
-  }
+    var winner = playerScores.indexOf(Math.max(...playerScores));
 
+    console.log(`winner is ${winner} with ${playerScores[winner]}`);
+    this.players.forEach(p => {
+      console.log(`player ${p.name} has ${p.chips} chips.`);
+    });
+  }
 }
