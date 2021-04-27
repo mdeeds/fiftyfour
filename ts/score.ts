@@ -5,8 +5,7 @@ export class Score {
   constructor() {
     this.GenerateScoreTable();
   }
-
-  public scoreHand(hand: Array<Card>): number {
+  private handToString(hand: Array<Card>): string {
     let handString = "";
     let suit = hand[0].suit;
     let suited: boolean = true;
@@ -20,9 +19,19 @@ export class Score {
       handString += '+';
     }
     const sorted = handString.split('').sort().join('');
+    return sorted;
+  }
+
+  public scoreHand(hand: Array<Card>): number {
+
+    let sorted = this.handToString(hand);
     let score = this.scoreTable.get(sorted);
     return score;
   }
+
+  // public percentToWin(playerHand: Array<Card>, communityCards: Array<Card>, numCards: number, numPlayers: number) {
+
+  // }
 
   private GenerateScoreTable() {
     var cards = "23456789TJQKA";
