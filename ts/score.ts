@@ -1,4 +1,6 @@
 import { Card } from "./card";
+import { Deck } from "./deck";
+import { Choose } from "./choose";
 
 export class Score {
   public scoreTable: Map<string, number> = new Map<string, number>();
@@ -29,9 +31,50 @@ export class Score {
     return score;
   }
 
-  // public percentToWin(playerHand: Array<Card>, communityCards: Array<Card>, numCards: number, numPlayers: number) {
+  public bestHand(cards: Array<Card>): number {
+    let bestScore = 0;
+    const c = new Choose<Card>(cards, 5);
+    const hand = new Array<Card>();
+    while (!c.isDone()) {
+      c.next(hand);
+      bestScore = Math.max(this.scoreHand(hand), bestScore);
+    }
+    return bestScore;
+  }
 
-  // }
+  public percentToWin(deck: Deck<Card>, playerHand: Array<Card>, communityCards: Array<Card>, numPlayers: number) {
+    let numberOfCardsFromDeck = (5 - communityCards.length) + 2 * (numPlayers - 1);
+    const c = new Choose<Card>(deck.getInDeck(), numberOfCardsFromDeck);
+    const deal = new Array<Card>();
+    const hands = new Array<Array<Card>>();
+    var wins = 0;
+    var count = 0;
+    while (!c.isDone()) {
+      c.next(deal);
+      let tempCommunityCards = [...communityCards]
+      while (tempCommunityCards.length < 5) {
+        tempCommunityCards.push(deal.pop());
+      }
+      let tempHand = playerHand.concat(tempCommunityCards);
+      hands[0] = tempHand
+      for (let i = 1; i < numPlayers; i++) {
+        let tempHand = [...tempCommunityCards];
+        tempHand.push(deal.pop());
+        tempHand.push(deal.pop());
+        hands[i] = tempHand;
+      }
+      let bestScores: Array<number> = new Array<number>();
+      hands.forEach(h => {
+
+        bestScores.push(this.bestHand(h));
+      });
+      if (bestScores[0] == Math.max(...bestScores)){
+        wins++;
+      }
+      count++;
+    }
+    return wins / count;
+  }
 
   private GenerateScoreTable() {
     var cards = "23456789TJQKA";

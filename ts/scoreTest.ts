@@ -2,6 +2,7 @@ import { Score } from "./score";
 import { Perf } from "./perf";
 import { Card } from "./card";
 import { CardStub } from "./cardStub";
+import { Deck } from "./deck";
 
 function constructorTest() {
   const startTime = Perf.now();
@@ -33,5 +34,45 @@ function scoreTest() {
   console.assert(score === 7462);
 }
 
+function percentToWinTest() {
+  var s: Score = new Score();
+  const cards = Deck.pokerDeckStubs();
+  const deck = new Deck<Card>(cards);
+  deck.shuffle();
+  const hand = new Array<Card>();
+  const communityCards = new Array<Card>();
+
+  hand.push(deck.pop());
+  hand.push(deck.pop());
+
+  communityCards.push(deck.pop());
+  communityCards.push(deck.pop());
+  communityCards.push(deck.pop());
+
+  const startTime = Perf.now();
+  let chance = s.percentToWin(deck, hand, communityCards, 2);
+  console.log(`Elapsed ms: ${Perf.now() - startTime}`);
+  console.assert(chance > 0 && chance < 1);
+}
+
+function bestHandTest() {
+  var s: Score = new Score();
+  const hand: Array<Card> = new Array<Card>();
+  hand.push(new CardStub('C', 14));
+  hand.push(new CardStub('C', 13));
+  hand.push(new CardStub('C', 12));
+  hand.push(new CardStub('C', 11));
+  hand.push(new CardStub('C', 10));
+  hand.push(new CardStub('S', 7));
+  hand.push(new CardStub('D', 2));
+
+  const startTime = Perf.now();
+  let score = s.bestHand(hand);
+  console.log(`Elapsed ms: ${Perf.now() - startTime}`);
+  console.assert(score === 7462);
+}
+
 constructorTest();
 scoreTest();
+percentToWinTest();
+bestHandTest();
