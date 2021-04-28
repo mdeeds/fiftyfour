@@ -45,22 +45,20 @@ export class HoldEm {
   }
 
   public playRound() {
-    const cards = Deck.pokerDeckStubs();
-    const deck = new Deck<Card>(cards);
-    deck.shuffle();
+    this.deck.shuffle();
 
     this.phase = 'pre-flop';
-    this.dealHoleCards(deck);
-    this.Actions(deck);
+    this.dealHoleCards(this.deck);
+    this.Actions(this.deck);
     this.phase = 'flop';
-    this.dealFlop(deck);
-    this.Actions(deck);
+    this.dealFlop(this.deck);
+    this.Actions(this.deck);
     this.phase = 'turn';
-    this.dealOne(deck);
-    this.Actions(deck);
+    this.dealOne(this.deck);
+    this.Actions(this.deck);
     this.phase = 'river';
-    this.dealOne(deck);
-    this.Actions(deck);
+    this.dealOne(this.deck);
+    this.Actions(this.deck);
     this.showdown();
   }
 
@@ -105,11 +103,11 @@ export class HoldEm {
 
   private Actions(deck: Deck<Card>) {
     var playing = 0;
-    this.players.forEach(p => {
+    for (const p of this.players) {
       if (!p.isFolded) {
         playing++;
       }
-    });
+    }
     if (playing <= 1) {
       return;
     }
@@ -147,22 +145,21 @@ export class HoldEm {
 
   private dealOne(deck: Deck<Card>) {
     this.communityCards.push(deck.pop());
-
   }
 
   private showdown() {
     var s: Score = new Score();
     var playerScores: Array<number> = new Array<number>();
-    this.players.forEach(p => {
+    for (const p of this.players) {
       playerScores.push(s.bestHand(p.holeCards.concat(this.communityCards)));
     });
-    var winner = playerScores.indexOf(Math.max(...playerScores));
+    const winner = playerScores.indexOf(Math.max(...playerScores));
     this.players[winner].chips += this.chipsInPot;
     this.chipsInPot = 0;
 
     console.log(`winner is ${this.players[winner].name} with a hand score of ${playerScores[winner]}`);
     this.players.forEach(p => {
       console.log(`player ${p.name} has ${p.chips} chips.`);
-    });
+    };
   }
 }
