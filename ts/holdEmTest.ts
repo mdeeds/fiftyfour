@@ -1,21 +1,28 @@
+import { AlwaysCall } from "./alwaysCall";
+import { AlwaysBet } from "./alwaysBet";
 import { HoldEm } from "./holdEm";
 import { Perf } from "./perf";
-
-function constructorTest() {
-  const startTime = Perf.now();
-  var game: HoldEm = new HoldEm(1000, 2);
-  console.log(`Elapsed ms: ${Perf.now() - startTime}`);
-  console.assert(game.getNumPlayers() === 2);
-}
+import { Player } from "./player";
 
 function playRoundTest() {
-  var game: HoldEm = new HoldEm(1000, 2);
+  let players = new Array<Player>();
+
+  let p1: Player = new Player();
+  p1.name = "Matt";
+  p1.strat = new AlwaysCall();
+  players.push(p1);
+
+  let p2: Player = new Player();
+  p2.name = "Steve";
+  p2.strat = new AlwaysBet();
+  players.push(p2);
+
+  var game: HoldEm = new HoldEm(1000, players);
   const startTime = Perf.now();
   game.playRound();
   console.log(`Elapsed ms: ${Perf.now() - startTime}`);
 }
 
-constructorTest();
 playRoundTest();
 let stop = 0;
 

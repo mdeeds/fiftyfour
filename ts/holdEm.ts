@@ -12,17 +12,28 @@ export class HoldEm {
   private phase: GamePhase;
   private dealerIndex: number;
   private currentPlayerIndex;
+  private currentBet;
+  private needActions: number;
 
-  constructor(buyIn: number, numberOfPlayers: number) {
+  constructor(buyIn: number, players: Array<Player>) {
     this.dealerIndex = 0;
     this.currentPlayerIndex = 1;
     this.chipsInPot = 0;
     this.phase = 'pre-flop';
-    for (let i = 0; i < numberOfPlayers; i++) {
-      var p: Player = new Player()
+    this.currentBet = 0;
+    this.players = players;
+    this.needActions = players.length;
+    this.players.forEach(p => {
       p.chips = buyIn;
-      this.players.push(p);
-    }
+    });
+  }
+
+  public getCurrentBet() {
+    return this.currentBet;
+  }
+
+  public getCurrentPlayer() {
+    return this.players[this.currentPlayerIndex];
   }
 
   private nextPlayer() {
@@ -53,9 +64,30 @@ export class HoldEm {
     this.showdown();
   }
 
-  private bet(playerIndex: number, amount: number) {
+  private bet(amount: number) {
+    // amount must be in increments of the small blind.
+    amount = Math.round(amount);
+    let amountToCall = this.currentBet - this.getCurrentPlayer().betThisRound;
+    if (amount <= 0) {
+      return;
+    }
+    if (this.players[this.currentPlayerIndex].chips < amount) {
+      return;
+    }
+    if (amount < amountToCall) {
+      return;
+    }
+    if (amount == amountToCall) {
+      console.log(`${this.players[this.currentPlayerIndex].name} calls with ${amount}`);
+    }
+    else {
+      console.log(`${this.players[this.currentPlayerIndex].name} bets ${amount}`);
+    }
+    this.currentBet = amount;
     this.chipsInPot += amount;
-    this.players[playerIndex].chips -= amount;
+    this.players[this.currentPlayerIndex].chips -= amount;
+    this.players[this.currentPlayerIndex].betThisRound += amount;
+    this.needActions = this.players.length;
   }
 
   private dealHoleCards(deck: Deck<Card>) {
@@ -64,10 +96,10 @@ export class HoldEm {
       p.holeCards.push(deck.pop());
     });
     // small blind
-    this.bet(this.currentPlayerIndex, 1);
+    this.bet(1);
     this.nextPlayer();
     // big blind
-    this.bet(this.currentPlayerIndex, 2);
+    this.bet(2);
     this.nextPlayer();
   }
 
@@ -82,16 +114,29 @@ export class HoldEm {
       return;
     }
 
-    var needActions = this.players.length;
-    while (needActions > 0) {
+    console.log(this.phase);
+    this.needActions = this.players.length;
+    while (this.needActions > 0) {
       let p = this.players[this.currentPlayerIndex];
       if (!p.isFolded) {
-        // ********** TODO: call model for the player and do stuff. ************
-        console.log(`player Index ${this.currentPlayerIndex}. phase ${this.phase}`);
+        var amount = p.strat.action(this);
+        let amoutToCall = this.currentBet - this.getCurrentPlayer().betThisRound;
+        if (amount < amoutToCall) {
+          console.log(`${this.players[this.currentPlayerIndex].name} folds.`);
+          this.getCurrentPlayer().isFolded = true;
+        }
+        else {
+          this.bet(amount);
+        }
       }
       this.nextPlayer();
-      needActions--;
+      this.needActions--;
     }
+    // sweep everything into the pot
+    this.currentBet = 0;
+    this.players.forEach(p => {
+      p.betThisRound = 0;
+    });
   }
 
   private dealFlop(deck: Deck<Card>) {
@@ -112,8 +157,10 @@ export class HoldEm {
       playerScores.push(s.bestHand(p.holeCards.concat(this.communityCards)));
     });
     var winner = playerScores.indexOf(Math.max(...playerScores));
+    this.players[winner].chips += this.chipsInPot;
+    this.chipsInPot = 0;
 
-    console.log(`winner is ${winner} with ${playerScores[winner]}`);
+    console.log(`winner is ${this.players[winner].name} with a hand score of ${playerScores[winner]}`);
     this.players.forEach(p => {
       console.log(`player ${p.name} has ${p.chips} chips.`);
     });
