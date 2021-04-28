@@ -2,6 +2,7 @@ import { HoldEm } from "./holdEm";
 import { Perf } from "./perf";
 
 function constructorTest() {
+  console.log('constructorTest');
   const startTime = Perf.now();
   var game: HoldEm = new HoldEm(1000, 2);
   console.log(`Elapsed ms: ${Perf.now() - startTime}`);
@@ -9,6 +10,7 @@ function constructorTest() {
 }
 
 function playRoundTest() {
+  console.log('playRoundTest');
   var game: HoldEm = new HoldEm(1000, 2);
   const startTime = Perf.now();
   game.playRound();

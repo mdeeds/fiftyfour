@@ -73,11 +73,11 @@ export class HoldEm {
 
   private Actions(deck: Deck<Card>) {
     var playing = 0;
-    this.players.forEach(p => {
+    for (const p of this.players) {
       if (!p.isFolded) {
         playing++;
       }
-    });
+    }
     if (playing <= 1) {
       return;
     }
@@ -86,7 +86,7 @@ export class HoldEm {
     while (needActions > 0) {
       let p = this.players[this.currentPlayerIndex];
       if (!p.isFolded) {
-        // ********** TODO: call model for the player and do stuff. ************
+        // TODO: call model for the player and do stuff. ************
         console.log(`player Index ${this.currentPlayerIndex}. phase ${this.phase}`);
       }
       this.nextPlayer();
@@ -102,20 +102,21 @@ export class HoldEm {
 
   private dealOne(deck: Deck<Card>) {
     this.communityCards.push(deck.pop());
-
   }
 
   private showdown() {
     var s: Score = new Score();
     var playerScores: Array<number> = new Array<number>();
-    this.players.forEach(p => {
+    for (const p of this.players) {
       playerScores.push(s.bestHand(p.holeCards.concat(this.communityCards)));
-    });
-    var winner = playerScores.indexOf(Math.max(...playerScores));
+    };
+    const winner = playerScores.indexOf(Math.max(...playerScores));
+    this.players[winner].chips += this.chipsInPot;
+    this.chipsInPot = 0;
 
     console.log(`winner is ${winner} with ${playerScores[winner]}`);
-    this.players.forEach(p => {
+    for (const p of this.players) {
       console.log(`player ${p.name} has ${p.chips} chips.`);
-    });
+    };
   }
 }
