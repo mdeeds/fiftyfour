@@ -14,16 +14,15 @@ export class HoldEm {
   private currentPlayerIndex: number;
   private deck: Deck<Card>;
 
-  constructor(buyIn: number, numberOfPlayers: number, cards: Card[]) {
+  constructor(buyIn: number, players: Player[], cards: Card[]) {
     this.deck = new Deck<Card>(cards);
+    this.players = players;
     this.dealerIndex = 0;
     this.currentPlayerIndex = 1;
     this.chipsInPot = 0;
     this.phase = 'pre-flop';
-    for (let i = 0; i < numberOfPlayers; i++) {
-      var p: Player = new Player()
-      p.chips = buyIn;
-      this.players.push(p);
+    for (const player of players) {
+      player.chips = buyIn;
     }
   }
 
