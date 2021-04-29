@@ -14,7 +14,7 @@ export class Player {
     'Francine', 'Gary', 'Herman', 'Izzie', 'Jack', 'Kili'];
   private static nameIndex = 0;
 
-  readonly name: string;
+  public name: string;
   public holeCards: Array<Card> = new Array<Card>();
   public chips: number;
   public isFolded: boolean;

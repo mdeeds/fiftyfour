@@ -1,5 +1,6 @@
 import { Card } from "./card";
 import { Deck } from "./deck";
+import { GameState } from "./gameState";
 import { Player } from "./player";
 import { Score } from "./score";
 
@@ -31,6 +32,17 @@ export class HoldEm {
     }
   }
 
+  public getChipsInPot() {
+    return this.chipsInPot;
+  }
+
+  public getDeck() {
+    return this.deck;
+  }
+  public getCommunityCards() {
+    return this.communityCards;
+  }
+
   public getCurrentBet() {
     return this.currentBet;
   }
@@ -51,29 +63,36 @@ export class HoldEm {
     return this.players.length;
   }
 
-  public playRound() {
+
+  public playRound(): Array<GameState> {
+    var gameStates: Array<GameState> = new Array<GameState>();
+
     this.currentPlayerIndex = this.dealerIndex;
-    this.prepareDeck();
+    this.reset();
     this.phase = 'pre-flop';
-    this.dealHoleCards(this.deck);
-    this.Actions(this.deck);
+    this.dealHoleCards();
+    this.Actions(gameStates);
     this.phase = 'flop';
-    this.dealFlop(this.deck);
-    this.Actions(this.deck);
+    this.dealFlop();
+    this.Actions(gameStates);
     this.phase = 'turn';
-    this.dealOne(this.deck);
-    this.Actions(this.deck);
+    this.dealOne();
+    this.Actions(gameStates);
     this.phase = 'river';
-    this.dealOne(this.deck);
-    this.Actions(this.deck);
-    this.showdown();
+    this.dealOne();
+    this.Actions(gameStates);
+    var winner: number = this.showdown();
     this.nextDealer();
+
+    var winningActions = gameStates.filter(gs => gs.currentPlayerIndex === winner);
+    return winningActions;
   }
 
-  private prepareDeck() {
+  private reset() {
     this.communityCards = [];
     for (const p of this.players) {
       p.holeCards = [];
+      p.isFolded = false;
     }
     this.deck.recombine();
     this.deck.shuffle();
@@ -82,17 +101,23 @@ export class HoldEm {
   private bet(amount: number) {
     // amount must be in increments of the small blind.
     amount = Math.round(amount);
+    // you can only bet up to what you have.
+    amount = Math.min(this.players[this.currentPlayerIndex].chips, amount)
+    // bet cannon be negative
+    amount = Math.max(0, amount);
+    // is it a check?
     let amountToCall = this.currentBet - this.getCurrentPlayer().betThisRound;
-    if (amount <= 0) {
+    if (amount < amountToCall && amountToCall > 0) {
+      console.log(`${this.players[this.currentPlayerIndex].name} folds.`);
+      this.players[this.currentPlayerIndex].isFolded = true;
+      return;
+    }
+    //is it a fold?
+    if (amount == 0 && amountToCall == 0) {
       console.log(`${this.players[this.currentPlayerIndex].name} checks.`);
       return;
     }
-    if (this.players[this.currentPlayerIndex].chips < amount) {
-      return;
-    }
-    if (amount < amountToCall) {
-      return;
-    }
+
     if (amount == amountToCall) {
       console.log(`${this.players[this.currentPlayerIndex].name} calls with ${amount}.`);
     }
@@ -107,10 +132,10 @@ export class HoldEm {
     console.log(`The current bet is ${this.currentBet}. There are ${this.chipsInPot} chips in the pot.`);
   }
 
-  private dealHoleCards(deck: Deck<Card>) {
+  private dealHoleCards() {
     this.players.forEach(p => {
-      p.holeCards.push(deck.pop());
-      p.holeCards.push(deck.pop());
+      p.holeCards.push(this.deck.pop());
+      p.holeCards.push(this.deck.pop());
     });
     // small blind
     this.bet(1);
@@ -120,14 +145,18 @@ export class HoldEm {
     this.nextPlayer();
   }
 
-  private Actions(deck: Deck<Card>) {
-    var playing = 0;
+  private onePlayerLeftStanding() {
+    var numberPlaying = 0;
     for (const p of this.players) {
       if (!p.isFolded) {
-        playing++;
+        numberPlaying++;
       }
     }
-    if (playing <= 1) {
+    return numberPlaying <= 1;
+  }
+
+  private Actions(gameStates: Array<GameState>) {
+    if (this.onePlayerLeftStanding()) {
       return;
     }
 
@@ -136,15 +165,11 @@ export class HoldEm {
     while (this.needActions > 0) {
       let p = this.players[this.currentPlayerIndex];
       if (!p.isFolded) {
-        var amount = p.strat.action(this);
-        let amoutToCall = this.currentBet - this.getCurrentPlayer().betThisRound;
-        if (amount < amoutToCall) {
-          console.log(`${this.players[this.currentPlayerIndex].name} folds.`);
-          this.getCurrentPlayer().isFolded = true;
-        }
-        else {
-          this.bet(amount);
-        }
+        var gs: GameState = this.getGameState();
+        var amount = p.strat.action(gs);
+        this.bet(amount);
+        gs.action = amount;
+        gameStates.push(gs);
       }
       this.nextPlayer();
       this.needActions--;
@@ -156,14 +181,28 @@ export class HoldEm {
     });
   }
 
-  private dealFlop(deck: Deck<Card>) {
-    this.communityCards.push(deck.pop());
-    this.communityCards.push(deck.pop());
-    this.communityCards.push(deck.pop());
+  private getGameState(): GameState {
+    let gs: GameState = new GameState(
+      this.getCurrentPlayer(),
+      this.communityCards,
+      this.chipsInPot,
+      this.phase,
+      this.dealerIndex,
+      this.currentPlayerIndex,
+      this.currentBet,
+      this.deck,
+      this.getNumPlayers());
+    return gs;
   }
 
-  private dealOne(deck: Deck<Card>) {
-    this.communityCards.push(deck.pop());
+  private dealFlop() {
+    this.communityCards.push(this.deck.pop());
+    this.communityCards.push(this.deck.pop());
+    this.communityCards.push(this.deck.pop());
+  }
+
+  private dealOne() {
+    this.communityCards.push(this.deck.pop());
   }
 
   private showdown() {
@@ -171,7 +210,11 @@ export class HoldEm {
     var s: Score = new Score();
     var playerScores: Array<number> = new Array<number>();
     for (const p of this.players) {
-      playerScores.push(s.bestHand(p.holeCards.concat(this.communityCards)));
+      let score = 0;
+      if (!p.isFolded) {
+        score = s.bestHand(p.holeCards.concat(this.communityCards));
+      }
+      playerScores.push(score);
     }
     // TODO: Fix the tie condition.  Keep in mind that when there is a tie all
     // players don't nessisarily win (ie 3 players with 2 that tie)
@@ -183,5 +226,6 @@ export class HoldEm {
     for (const p of this.players) {
       console.log(`player ${p.name} has ${p.chips} chips.`);
     }
+    return winner;
   }
 }

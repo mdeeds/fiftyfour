@@ -1,10 +1,11 @@
 import { Strategy } from "./strategy";
 import { HoldEm } from "./holdEm";
+import { GameState } from "./gameState";
 
 export class AlwaysBet implements Strategy {
-  action(game: HoldEm): number {
-    let player = game.getCurrentPlayer();
-    let amountToCall = game.getCurrentBet() - player.betThisRound
+  action(game: GameState): number {
+    let player = game.player;
+    let amountToCall = game.currentBet - player.betThisRound
     if (player.betThisRound <= 0) {
       return amountToCall + 1;
     }

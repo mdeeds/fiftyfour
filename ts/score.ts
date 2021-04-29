@@ -1,6 +1,7 @@
 import { Card } from "./card";
 import { Deck } from "./deck";
 import { Choose } from "./choose";
+import { Perf } from "./perf";
 
 export class Score {
   public scoreTable: Map<string, number> = new Map<string, number>();
@@ -20,7 +21,7 @@ export class Score {
     if (suited) {
       handString += '+';
     }
-    const sorted = handString.split('').sort().join('');
+    const sorted = handString.split('').sort().join(''); // I think this takes a long time.
     return sorted;
   }
 
@@ -35,6 +36,7 @@ export class Score {
     let bestScore = 0;
     const c = new Choose<Card>(cards, 5);
     const hand = new Array<Card>();
+    var count = 0;
     while (!c.isDone()) {
       c.next(hand);
       bestScore = Math.max(this.scoreHand(hand), bestScore);
@@ -42,13 +44,14 @@ export class Score {
     return bestScore;
   }
 
-  public percentToWin(deck: Deck<Card>, playerHand: Array<Card>, communityCards: Array<Card>, numPlayers: number) {
+  public percentToWin(deck: Deck<Card>, playerHand: Array<Card>, communityCards: Array<Card>, numPlayers: number, timeout: number = 10000) {
     let numberOfCardsFromDeck = (5 - communityCards.length) + 2 * (numPlayers - 1);
     const c = new Choose<Card>(deck.getInDeck(), numberOfCardsFromDeck);
     const deal = new Array<Card>();
     const hands = new Array<Array<Card>>();
     var wins = 0;
     var count = 0;
+    const startTime = Perf.now();
     while (!c.isDone()) {
       c.next(deal);
       let tempCommunityCards = [...communityCards]
@@ -68,10 +71,13 @@ export class Score {
 
         bestScores.push(this.bestHand(h));
       });
-      if (bestScores[0] == Math.max(...bestScores)){
+      if (bestScores[0] == Math.max(...bestScores)) {
         wins++;
       }
       count++;
+      if ((Perf.now() - startTime) > timeout) {
+        break;
+      }
     }
     return wins / count;
   }

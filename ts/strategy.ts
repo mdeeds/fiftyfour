@@ -1,5 +1,6 @@
+import { GameState } from "./gameState";
 import { HoldEm } from "./holdEm";
 
 export interface Strategy {
-  action(game: HoldEm): number;
+  action(game: GameState): number;
 }
