@@ -17,6 +17,8 @@ export class HoldEm {
   private deck: Deck<Card>;
 
   constructor(buyIn: number, players: Array<Player>) {
+    const cards = Deck.pokerDeckStubs();
+    this.deck = new Deck<Card>(cards);
     this.dealerIndex = 0;
     this.currentPlayerIndex = 1;
     this.chipsInPot = 0;
@@ -41,13 +43,17 @@ export class HoldEm {
     this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.length;
   }
 
+  private nextDealer() {
+    this.dealerIndex = (this.dealerIndex + 1) % this.players.length;
+  }
+
   public getNumPlayers() {
     return this.players.length;
   }
 
   public playRound() {
-    this.deck.shuffle();
-
+    this.currentPlayerIndex = this.dealerIndex;
+    this.prepareDeck();
     this.phase = 'pre-flop';
     this.dealHoleCards(this.deck);
     this.Actions(this.deck);
@@ -61,6 +67,16 @@ export class HoldEm {
     this.dealOne(this.deck);
     this.Actions(this.deck);
     this.showdown();
+    this.nextDealer();
+  }
+
+  private prepareDeck() {
+    this.communityCards = [];
+    for (const p of this.players) {
+      p.holeCards = [];
+    }
+    this.deck.recombine();
+    this.deck.shuffle();
   }
 
   private bet(amount: number) {
@@ -68,6 +84,7 @@ export class HoldEm {
     amount = Math.round(amount);
     let amountToCall = this.currentBet - this.getCurrentPlayer().betThisRound;
     if (amount <= 0) {
+      console.log(`${this.players[this.currentPlayerIndex].name} checks.`);
       return;
     }
     if (this.players[this.currentPlayerIndex].chips < amount) {
@@ -77,16 +94,17 @@ export class HoldEm {
       return;
     }
     if (amount == amountToCall) {
-      console.log(`${this.players[this.currentPlayerIndex].name} calls with ${amount}`);
+      console.log(`${this.players[this.currentPlayerIndex].name} calls with ${amount}.`);
     }
     else {
-      console.log(`${this.players[this.currentPlayerIndex].name} bets ${amount}`);
+      console.log(`${this.players[this.currentPlayerIndex].name} bets ${amount}.`);
+      this.needActions = this.players.length;
     }
-    this.currentBet = amount;
     this.chipsInPot += amount;
     this.players[this.currentPlayerIndex].chips -= amount;
     this.players[this.currentPlayerIndex].betThisRound += amount;
-    this.needActions = this.players.length;
+    this.currentBet = this.players[this.currentPlayerIndex].betThisRound;
+    console.log(`The current bet is ${this.currentBet}. There are ${this.chipsInPot} chips in the pot.`);
   }
 
   private dealHoleCards(deck: Deck<Card>) {
@@ -149,17 +167,19 @@ export class HoldEm {
   }
 
   private showdown() {
+    console.log(`showdown`);
     var s: Score = new Score();
     var playerScores: Array<number> = new Array<number>();
     for (const p of this.players) {
       playerScores.push(s.bestHand(p.holeCards.concat(this.communityCards)));
     }
+    // TODO fix the tie condition.  Keep in mind that when there is a tie all players don't nessisarily win (ie 3 players with 2 that tie)
     const winner = playerScores.indexOf(Math.max(...playerScores));
     this.players[winner].chips += this.chipsInPot;
     this.chipsInPot = 0;
 
     console.log(`winner is ${this.players[winner].name} with a hand score of ${playerScores[winner]}`);
-    for (const p of this.players){
+    for (const p of this.players) {
       console.log(`player ${p.name} has ${p.chips} chips.`);
     }
   }

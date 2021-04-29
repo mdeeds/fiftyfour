@@ -19,7 +19,9 @@ function playRoundTest() {
 
   var game: HoldEm = new HoldEm(1000, players);
   const startTime = Perf.now();
-  game.playRound();
+  for (let i = 0; i < 1000; i++) {
+    game.playRound();
+  }
   console.log(`Elapsed ms: ${Perf.now() - startTime}`);
 }
 
