@@ -14,6 +14,7 @@ export class HoldEm {
   private currentPlayerIndex;
   private currentBet;
   private needActions: number;
+  private deck: Deck<Card>;
 
   constructor(buyIn: number, players: Array<Player>) {
     this.dealerIndex = 0;
@@ -152,14 +153,14 @@ export class HoldEm {
     var playerScores: Array<number> = new Array<number>();
     for (const p of this.players) {
       playerScores.push(s.bestHand(p.holeCards.concat(this.communityCards)));
-    });
+    }
     const winner = playerScores.indexOf(Math.max(...playerScores));
     this.players[winner].chips += this.chipsInPot;
     this.chipsInPot = 0;
 
     console.log(`winner is ${this.players[winner].name} with a hand score of ${playerScores[winner]}`);
-    this.players.forEach(p => {
+    for (const p of this.players){
       console.log(`player ${p.name} has ${p.chips} chips.`);
-    };
+    }
   }
 }
