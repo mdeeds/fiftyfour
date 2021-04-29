@@ -129,6 +129,8 @@ class Player {
         this.name = Player.names[Player.nameIndex];
         ++Player.nameIndex;
         this.isFolded = false;
+        this.betThisRound = 0;
+        this.chips = 0;
     }
     static createNewPlayers(numberOfPlayers) {
         const players = [];
