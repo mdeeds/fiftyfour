@@ -15,7 +15,7 @@ export class Player {
   private static nameIndex = 0;
 
   readonly name: string;
-  readonly holeCards: Array<Card> = new Array<Card>();
+  public holeCards: Array<Card> = new Array<Card>();
   public chips: number;
   public isFolded: boolean;
   public strat: Strategy;
