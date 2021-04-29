@@ -3,6 +3,18 @@ import { Card } from "./card";
 export type Suit = 'C' | 'D' | 'H' | 'S';
 
 export class VisibleCard implements Card {
+
+  static pokerDeck(container: HTMLBodyElement | HTMLDivElement) {
+    const cards: VisibleCard[] = [];
+    for (const suit of VisibleCard.suits) {
+      for (let rank = 2; rank <= 14; ++rank) {
+        const card = new VisibleCard(suit, rank, container);
+        cards.push(card);
+      }
+    }
+    return cards;
+  }
+
   static suits: Suit[] = ['C', 'D', 'H', 'S'];
   static getPip(rank: number) {
     if (rank < 2 || rank > 14) {
@@ -23,7 +35,7 @@ export class VisibleCard implements Card {
     return pip;
   }
 
-  private div: HTMLDivElement;
+  private div: HTMLDivElement | HTMLSpanElement;
   readonly suit: Suit;
   readonly rank: number;
   readonly pip: string;
@@ -36,6 +48,13 @@ export class VisibleCard implements Card {
     this.pip = VisibleCard.getPip(rank);
     this.setFace();
     container.appendChild(this.div);
+    this.div.style.visibility = 'hidden';
+  }
+
+  moveTo(conatiner: HTMLDivElement | HTMLBodyElement) {
+    // DOM automatically handles removing from previous parent.
+    conatiner.appendChild(this.div);
+    this.div.style.visibility = 'visible';
   }
 
   private setFace() {
