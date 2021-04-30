@@ -19,6 +19,8 @@ export class StorageUtil {
   }
 
   static async saveObject(name: string, object: Object) {
+    const serialized = JSON.stringify(object);
+    console.log(`Saving ${serialized.length} bytes to ${name}.`)
     await StorageUtil.save(name, JSON.stringify(object));
   }
 
