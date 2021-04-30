@@ -8,7 +8,7 @@ export class Score {
   constructor() {
     this.GenerateScoreTable();
   }
-  public handToString(hand: Array<Card>): string {
+  private handToString(hand: Array<Card>): string {
     let handString = "";
     let suit = hand[0].suit;
     let suited: boolean = true;
@@ -26,7 +26,6 @@ export class Score {
   }
 
   public scoreHand(hand: Array<Card>): number {
-
     let sorted = this.handToString(hand);
     let score = this.scoreTable.get(sorted);
     return score;
