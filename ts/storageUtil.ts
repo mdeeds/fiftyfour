@@ -1,49 +1,27 @@
-import { readFile, writeFile } from "fs";
+import { readFile, readFileSync, writeFile, writeFileSync } from "fs";
 
 export class StorageUtil {
-  static save(name: string, data: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (typeof (localStorage) === 'undefined') {
-        writeFile(`data/${name}.txt`, data, (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      } else {
-        localStorage.setItem(name, data);
-        resolve();
-      }
-    });
+  static save(name: string, data: string) {
+    if (typeof (localStorage) === 'undefined') {
+      writeFileSync(`data/${name}.txt`, data);
+    } else {
+      localStorage.setItem(name, data);
+    }
   }
 
   static async saveObject(name: string, object: Object) {
-    const serialized = JSON.stringify(object);
-    console.log(`Saving ${serialized.length} bytes to ${name}.`)
-    await StorageUtil.save(name, JSON.stringify(object));
+    StorageUtil.save(name, JSON.stringify(object));
   }
 
-  static load(name: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      if (typeof (localStorage) === 'undefined') {
-        return readFile(`data/${name}.txt`, (err, data) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(data.toString());
-          }
-        });
-      } else {
-        resolve(localStorage.getItem(name));
-      }
-    });
+  static load(name: string) {
+    if (typeof (localStorage) === 'undefined') {
+      return readFileSync(`data/${name}.txt`)
+    } else {
+      return localStorage.getItem(name);
+    }
   }
 
-  static loadObject(name: string): Promise<Object> {
-    return new Promise((resolve, reject) => {
-      StorageUtil.load(name)
-        .then((data) => { resolve(JSON.parse(data)); });
-    });
+  static loadObject(name: string): Object {
+    return JSON.parse(StorageUtil.load(name).toString());
   }
 }

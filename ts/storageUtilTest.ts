@@ -1,4 +1,3 @@
-import { DH_CHECK_P_NOT_PRIME } from "constants";
 import { Card } from "./card";
 import { Deck } from "./deck";
 import { StorageUtil } from "./storageUtil";
@@ -6,21 +5,21 @@ import { StorageUtil } from "./storageUtil";
 async function saveLoad() {
   console.log('saveLoad');
   const content = `Hello ${Math.random()}\n`;
-  await StorageUtil.save('test-file', content);
-  const data = await StorageUtil.load('test-file');
-  console.assert(data === content);
+  StorageUtil.save('test-file', content);
+  const data = StorageUtil.load('test-file');
+  console.assert(data == content, `Actual: ${data}; Expected: ${content}`);
 }
 
 async function saveObject() {
   console.log('saveObject');
   const cards = Deck.pokerDeckStubs();
   const deck = new Deck<Card>(cards);
-  await StorageUtil.saveObject('test-deck', deck);
+  StorageUtil.saveObject('test-deck', deck);
 
   deck.shuffle();
   // When we load the deck, it should load the unshuffled deck,
   // and replace the shuffled one.
-  Object.assign(deck, await StorageUtil.loadObject('test-deck'));
+  Object.assign(deck, StorageUtil.loadObject('test-deck'));
 
   const topCard = deck.pop();
   console.log(topCard);
@@ -28,9 +27,5 @@ async function saveObject() {
   console.assert(topCard.suit === 'S', 2);
 }
 
-async function go() {
-  await saveLoad();
-  await saveObject();
-}
-
-go();
+saveLoad();
+saveObject();
