@@ -1,5 +1,5 @@
 import { AlwaysCall } from "./alwaysCall";
-import { AlwaysBet } from "./alwaysBet";
+import { BigAce } from "./bigAce";
 import { HoldEm } from "./holdEm";
 import { Perf } from "./perf";
 import { Player } from "./player";
@@ -10,8 +10,8 @@ function playRoundTest() {
   let players = new Array<Player>();
 
   let p1: Player = new Player();
-  p1.strat = new PotOdds(0, 10);
-  p1.name = "PotOdds 0%"
+  p1.strat = new AlwaysCall();
+  p1.name = "Always Call";
   players.push(p1);
 
   let p2: Player = new Player();
@@ -23,7 +23,7 @@ function playRoundTest() {
 
   var game: HoldEm = new HoldEm(1000, players, Deck.pokerDeckStubs());
   const startTime = Perf.now();
-  for (let i = 0; i < 1000; i++) {
+  for (let i = 0; i < 100; i++) {
     console.log(`*** Hand ${i} ***`);
     game.playRound();
   }

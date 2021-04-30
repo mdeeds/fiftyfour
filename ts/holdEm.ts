@@ -3,6 +3,7 @@ import { Deck } from "./deck";
 import { GameState } from "./gameState";
 import { Player } from "./player";
 import { Score } from "./score";
+import { StorageUtil } from "./storageUtil";
 
 export type GamePhase = 'pre-flop' | 'flop' | 'turn' | 'river';
 
@@ -63,8 +64,8 @@ export class HoldEm {
     return this.players.length;
   }
 
-
   public playRound(): Array<GameState> {
+
     var gameStates: Array<GameState> = new Array<GameState>();
 
     this.currentPlayerIndex = this.dealerIndex;
@@ -85,6 +86,8 @@ export class HoldEm {
     this.nextDealer();
 
     var winningActions = gameStates.filter(gs => gs.currentPlayerIndex === winner);
+
+    StorageUtil.saveObject(`${Math.round(Math.random() * 100000)}`, winningActions);
     return winningActions;
   }
 
