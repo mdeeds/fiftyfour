@@ -8,7 +8,7 @@ import { StorageUtil } from "./storageUtil";
 export type GamePhase = 'pre-flop' | 'flop' | 'turn' | 'river';
 
 export class HoldEm {
-  private players: Array<Player> = new Array<Player>();
+  readonly players: Array<Player> = new Array<Player>();
   private communityCards: Array<Card> = new Array<Card>();
   private chipsInPot: number;
   private phase: GamePhase;
@@ -219,13 +219,18 @@ export class HoldEm {
       }
       playerScores.push(score);
     }
-    // TODO: Fix the tie condition.  Keep in mind that when there is a tie all
-    // players don't nessisarily win (ie 3 players with 2 that tie)
-    const winner = playerScores.indexOf(Math.max(...playerScores));
-    this.players[winner].chips += this.chipsInPot;
+    const winningScore = Math.max(...playerScores);
+    const numWinners = playerScores.filter(score => score == winningScore).length;
+    let eachWinnerGets = this.chipsInPot / numWinners;
+    let winner = -1;
+    for (let i = 0; i < playerScores.length; i++) {
+      if (playerScores[i] == winningScore) {
+        this.players[i].chips += eachWinnerGets;
+        console.log(`winner is ${this.players[i].name} with a hand score of ${playerScores[i]}`);
+        winner = i;
+      }
+    }
     this.chipsInPot = 0;
-
-    console.log(`winner is ${this.players[winner].name} with a hand score of ${playerScores[winner]}`);
     for (const p of this.players) {
       console.log(`player ${p.name} has ${p.chips} chips.`);
     }

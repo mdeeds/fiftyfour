@@ -72,7 +72,16 @@ function bestHandTest() {
   console.assert(score === 7462);
 }
 
+function generateHoleCardLookupTest() {
+  var s: Score = new Score();
+  const startTime = Perf.now();
+  s.generateHoleCardLookup();
+  console.log(`Elapsed ms: ${Perf.now() - startTime}`);
+  console.assert(s.holeTable.size == 13 * 13);
+}
+
 constructorTest();
 scoreTest();
 percentToWinTest();
 bestHandTest();
+//generateHoleCardLookupTest();
