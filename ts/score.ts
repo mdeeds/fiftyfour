@@ -110,13 +110,19 @@ export class Score {
     return bestScore;
   }
 
-  public percentToWin(deck: Deck<Card>, playerHand: Array<Card>, communityCards: Array<Card>, numPlayers: number, timeout: number = 10000) {
+  public percentToWin(deck: Deck<Card>, playerHand: Array<Card>,
+    communityCards: Array<Card>, numPlayers: number,
+    timeout: number = 10000) {
     let numberOfCardsFromDeck = (5 - communityCards.length) + 2 * (numPlayers - 1);
     const c = new Choose<Card>(deck.getInDeck(), numberOfCardsFromDeck);
     const deal = new Array<Card>();
-    const hands = new Array<Array<Card>>();
-    var wins = 0;
-    var count = 0;
+    const hands: Card[][] = [];
+    for (let p = 0; p < numPlayers; ++p) {
+      hands.push([]);
+    }
+    const bestScores: number[] = [];
+    let wins = 0;
+    let count = 0;
     const startTime = Perf.now();
     while (!c.isDone()) {
       c.next(deal);
@@ -124,19 +130,20 @@ export class Score {
       while (tempCommunityCards.length < 5) {
         tempCommunityCards.push(deal.pop());
       }
-      let tempHand = playerHand.concat(tempCommunityCards);
-      hands[0] = tempHand
-      for (let i = 1; i < numPlayers; i++) {
-        let tempHand = [...tempCommunityCards];
-        tempHand.push(deal.pop());
-        tempHand.push(deal.pop());
-        hands[i] = tempHand;
+      hands[0].splice(0);
+      for (const c of playerHand) {
+        hands[0].push(c);
       }
-      let bestScores: Array<number> = new Array<number>();
-      hands.forEach(h => {
-
-        bestScores.push(this.bestHand(h));
-      });
+      for (const c of tempCommunityCards) {
+        hands[0].push(c);
+      }
+      for (let i = 1; i < numPlayers; i++) {
+        hands[i].splice(0);
+        hands[i].push(...tempCommunityCards);
+        hands[i].push(deal.pop());
+        hands[i].push(deal.pop());
+        bestScores[i] = this.bestHand(hands[i]);
+      }
       if (bestScores[0] == Math.max(...bestScores)) {
         wins++;
       }
