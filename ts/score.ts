@@ -110,10 +110,66 @@ export class Score {
     return bestScore;
   }
 
-  public percentToWin(deck: Deck<Card>, playerHand: Array<Card>,
-    communityCards: Array<Card>, numPlayers: number,
-    timeout: number = 10000) {
-    let numberOfCardsFromDeck = (5 - communityCards.length) + 2 * (numPlayers - 1);
+  // public generateHoleCardLookup() {
+  //   let holeWinCount: Map<string, Array<number>> = new Map<string, Array<number>>();
+  //   const cards = Deck.pokerDeckStubs();
+  //   const deck = new Deck<Card>(cards);
+  //   deck.shuffle();
+  //   const c = new Choose<Card>(deck.getInDeck(), 9);
+  //   const deal = new Array<Card>();
+  //   const startTime = Perf.now();
+  //   while (!c.isDone()) {
+  //     if ((Perf.now() - startTime) > 60 * 1000) {
+  //       break;
+  //     }
+  //     c.next(deal);
+  //     let communityCards = []
+  //     communityCards.push(deal.pop());
+  //     communityCards.push(deal.pop());
+  //     communityCards.push(deal.pop());
+  //     communityCards.push(deal.pop());
+  //     communityCards.push(deal.pop());
+  //     let playerHand = [];
+  //     playerHand.push(deal.pop());
+  //     playerHand.push(deal.pop());
+  //     let opponentHand = [];
+  //     opponentHand.push(deal.pop());
+  //     opponentHand.push(deal.pop());
+  //     let playerScore = this.bestHand(playerHand.concat(communityCards));
+  //     let opponentScore = this.bestHand(opponentHand.concat(communityCards));
+  //     let handString = this.handToString(playerHand);
+  //     let win = 0;
+  //     if (playerScore == opponentScore) {
+  //       continue;
+  //     }
+  //     if (playerScore > opponentScore) {
+  //       win = 1;
+  //     }
+  //     if (holeWinCount.has(handString)) {
+  //       let currentWins = holeWinCount.get(handString)[0];
+  //       let currentCount = holeWinCount.get(handString)[1];
+  //       holeWinCount.set(handString, [currentWins + win, currentCount + 1]);
+  //     }
+  //     else {
+  //       holeWinCount.set(handString, [win, 1]);
+  //     }
+  //   }
+  //   for (const [key, value] of holeWinCount) {
+  //     this.holeTable.set(key, value[0] / value[1]);
+  //   }
+  //   let array = Array.from(this.holeTable, ([key, value]) => ({ key, value }));
+  //   StorageUtil.saveObject('holeTable', array);
+  // }
+
+  public percentToWin(
+    deck: Deck<Card>,
+    playerHand: Array<Card>,
+    communityCards: Array<Card>,
+    numPlayers: number,
+    timeout: number = 10000,
+    numCommunityCards: number = 5,
+    numPlayerCards: number = 2) {
+    let numberOfCardsFromDeck = (numCommunityCards - communityCards.length) + numPlayerCards * (numPlayers - 1);
     const c = new Choose<Card>(deck.getInDeck(), numberOfCardsFromDeck);
     const deal = new Array<Card>();
     const hands: Card[][] = [];
@@ -127,7 +183,7 @@ export class Score {
     while (!c.isDone()) {
       c.next(deal);
       let tempCommunityCards = [...communityCards]
-      while (tempCommunityCards.length < 5) {
+      while (tempCommunityCards.length < numCommunityCards) {
         tempCommunityCards.push(deal.pop());
       }
       hands[0].splice(0);
