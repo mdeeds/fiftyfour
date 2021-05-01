@@ -180,9 +180,11 @@ export class Score {
     let wins = 0;
     let count = 0;
     const startTime = Perf.now();
+    const tempCommunityCards: Card[] = [];
     while (!c.isDone()) {
       c.next(deal);
-      let tempCommunityCards = [...communityCards]
+      tempCommunityCards.splice(0);
+      tempCommunityCards.push(...communityCards);
       while (tempCommunityCards.length < numCommunityCards) {
         tempCommunityCards.push(deal.pop());
       }
