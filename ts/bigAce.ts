@@ -5,10 +5,16 @@ import { Score } from "./score";
 export class BigAce implements Strategy {
   action(game: GameState): number {
     let s: Score = new Score();
-    let handString: string = s.handToString(game.player.holeCards);
+    let hasAce = false;
+    for (const card of game.player.holeCards) {
+      if (card.pip === 'A') {
+        hasAce = true;
+        break;
+      }
+    }
     let player = game.player;
     let amountToCall = game.currentBet - player.betThisRound
-    if (player.betThisRound <= 0 && handString.indexOf("A") >= 0) {
+    if (player.betThisRound <= 0 && hasAce) {
       return amountToCall + 10;
     }
     else {

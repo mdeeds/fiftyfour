@@ -5,34 +5,98 @@ import { Perf } from "./perf";
 import { StorageUtil } from "./storageUtil";
 import { nextTick } from "node:process";
 
+class ScoreNode {
+  private children: ScoreNode[] = [];
+  private score: number;
+  constructor() { }
+
+  // ranks must be sorted.
+  insert(ranks: number[], index: number, score: number) {
+    if (index === ranks.length) {
+      this.score = score;
+      return;
+    }
+    let next = this.children[ranks[index]];
+    if (!next) {
+      this.children[ranks[index]] = new ScoreNode();
+      while (this.children.length < ranks[index]) {
+        this.children.push(null);
+      }
+      next = this.children[ranks[index]];
+    }
+    next.insert(ranks, index + 1, score);
+  }
+
+  getScore(ranks: number[], index: number): number {
+    if (this.children.length === 0) {
+      return this.score;
+    }
+    const next = this.children[ranks[index]];
+    if (!next) {
+      return -1;
+    }
+    return next.getScore(ranks, index + 1);
+  }
+}
+
+
+class ScoreTable {
+  private flushTree: ScoreNode = new ScoreNode();
+  private offSuitTree: ScoreNode = new ScoreNode();
+  constructor() {
+  }
+
+  insert(hand: string, score: number) {
+    var cards = "23456789TJQKA";
+    const isFlush = hand.startsWith('+');
+    const ranks: number[] = [];
+    for (const c of hand) {
+      if (c === '+') {
+        continue;
+      }
+      const rank = cards.indexOf(c) + 2;
+      ranks.push(rank);
+    }
+    ranks.sort();
+    // console.log(`AAAAA: ranks: ${ranks}`);
+    if (isFlush) {
+      // console.log(`AAAAA: flush ${ranks} ${score}`);
+      this.flushTree.insert(ranks, 0, score);
+    } else {
+      this.offSuitTree.insert(ranks, 0, score);
+    }
+  }
+
+  score(hand: Card[]): number {
+    const ranks: number[] = [];
+    let isFlush = true;
+    for (const c of hand) {
+      if (c.suit != hand[0].suit) {
+        isFlush = false;
+      }
+      ranks.push(c.rank);
+    }
+    ranks.sort();
+    // console.log(`AAAAA: ${ranks}`);
+    let score = -1;
+    if (isFlush) {
+      score = this.flushTree.getScore(ranks, 0);
+    }
+    if (score < 0) {
+      score = this.offSuitTree.getScore(ranks, 0);
+    }
+    return score;
+  }
+}
+
 export class Score {
-  public scoreTable: Map<string, number> = new Map<string, number>();
-  //public scoreTree:
-  public holeTable: Map<string, number> = new Map<string, number>();
+  private scoreTable: ScoreTable = new ScoreTable();
   constructor() {
     this.GenerateScoreTable();
   }
-  public handToString(hand: Array<Card>): string {
-    let handString = "";
-    let suit = hand[0].suit;
-    let suited: boolean = true;
-    hand.forEach(card => {
-      if (card.suit != suit) {
-        suited = false;
-      }
-      handString += card.pip;
-    })
-    if (suited) {
-      handString += '+';
-    }
-    const sorted = handString.split('').sort().join(''); // I think this takes a long time.
-    return sorted;
-  }
 
   public scoreHand(hand: Array<Card>): number {
-
-    let sorted = this.handToString(hand);
-    let score = this.scoreTable.get(sorted);
+    let score = this.scoreTable.score(hand);
     return score;
   }
 
@@ -48,56 +112,56 @@ export class Score {
     return bestScore;
   }
 
-  public generateHoleCardLookup() {
-    let holeWinCount: Map<string, Array<number>> = new Map<string, Array<number>>();
-    const cards = Deck.pokerDeckStubs();
-    const deck = new Deck<Card>(cards);
-    deck.shuffle();
-    const c = new Choose<Card>(deck.getInDeck(), 9);
-    const deal = new Array<Card>();
-    const startTime = Perf.now();
-    while (!c.isDone()) {
-      if ((Perf.now() - startTime) > 60 * 1000) {
-        break;
-      }
-      c.next(deal);
-      let communityCards = []
-      communityCards.push(deal.pop());
-      communityCards.push(deal.pop());
-      communityCards.push(deal.pop());
-      communityCards.push(deal.pop());
-      communityCards.push(deal.pop());
-      let playerHand = [];
-      playerHand.push(deal.pop());
-      playerHand.push(deal.pop());
-      let opponentHand = [];
-      opponentHand.push(deal.pop());
-      opponentHand.push(deal.pop());
-      let playerScore = this.bestHand(playerHand.concat(communityCards));
-      let opponentScore = this.bestHand(opponentHand.concat(communityCards));
-      let handString = this.handToString(playerHand);
-      let win = 0;
-      if (playerScore == opponentScore) {
-        continue;
-      }
-      if (playerScore > opponentScore) {
-        win = 1;
-      }
-      if (holeWinCount.has(handString)) {
-        let currentWins = holeWinCount.get(handString)[0];
-        let currentCount = holeWinCount.get(handString)[1];
-        holeWinCount.set(handString, [currentWins + win, currentCount + 1]);
-      }
-      else {
-        holeWinCount.set(handString, [win, 1]);
-      }
-    }
-    for (const [key, value] of holeWinCount) {
-      this.holeTable.set(key, value[0] / value[1]);
-    }
-    let array = Array.from(this.holeTable, ([key, value]) => ({ key, value }));
-    StorageUtil.saveObject('holeTable', array);
-  }
+  // public generateHoleCardLookup() {
+  //   let holeWinCount: Map<string, Array<number>> = new Map<string, Array<number>>();
+  //   const cards = Deck.pokerDeckStubs();
+  //   const deck = new Deck<Card>(cards);
+  //   deck.shuffle();
+  //   const c = new Choose<Card>(deck.getInDeck(), 9);
+  //   const deal = new Array<Card>();
+  //   const startTime = Perf.now();
+  //   while (!c.isDone()) {
+  //     if ((Perf.now() - startTime) > 60 * 1000) {
+  //       break;
+  //     }
+  //     c.next(deal);
+  //     let communityCards = []
+  //     communityCards.push(deal.pop());
+  //     communityCards.push(deal.pop());
+  //     communityCards.push(deal.pop());
+  //     communityCards.push(deal.pop());
+  //     communityCards.push(deal.pop());
+  //     let playerHand = [];
+  //     playerHand.push(deal.pop());
+  //     playerHand.push(deal.pop());
+  //     let opponentHand = [];
+  //     opponentHand.push(deal.pop());
+  //     opponentHand.push(deal.pop());
+  //     let playerScore = this.bestHand(playerHand.concat(communityCards));
+  //     let opponentScore = this.bestHand(opponentHand.concat(communityCards));
+  //     let handString = this.handToString(playerHand);
+  //     let win = 0;
+  //     if (playerScore == opponentScore) {
+  //       continue;
+  //     }
+  //     if (playerScore > opponentScore) {
+  //       win = 1;
+  //     }
+  //     if (holeWinCount.has(handString)) {
+  //       let currentWins = holeWinCount.get(handString)[0];
+  //       let currentCount = holeWinCount.get(handString)[1];
+  //       holeWinCount.set(handString, [currentWins + win, currentCount + 1]);
+  //     }
+  //     else {
+  //       holeWinCount.set(handString, [win, 1]);
+  //     }
+  //   }
+  //   for (const [key, value] of holeWinCount) {
+  //     this.holeTable.set(key, value[0] / value[1]);
+  //   }
+  //   let array = Array.from(this.holeTable, ([key, value]) => ({ key, value }));
+  //   StorageUtil.saveObject('holeTable', array);
+  // }
 
   public percentToWin(
       deck: Deck<Card>, 
@@ -147,6 +211,8 @@ export class Score {
   }
 
   private GenerateScoreTable() {
+    const scoreMap: Map<string, number> = new Map<string, number>();
+
     var cards = "23456789TJQKA";
 
     let ranked: Set<string> = new Set<string>();
@@ -283,12 +349,15 @@ export class Score {
     let score: number = ranked.size;
     ranked.forEach(s => {
       const sorted = s.split('').sort().join('')
-      if (this.scoreTable.has(sorted)) {
-        console.log(`${sorted} is already in the list as ${this.scoreTable[sorted]}. Adding again as ${score}`);
+      if (scoreMap.has(sorted)) {
+        console.log(`${sorted} is already in the list as ${scoreMap[sorted]}. Adding again as ${score}`);
       }
-      this.scoreTable.set(sorted, score);
+      scoreMap.set(sorted, score);
       score--;
     })
-    let stop = 1;
+
+    for (const [hand, score] of scoreMap) {
+      this.scoreTable.insert(hand, score);
+    }
   }
 }
