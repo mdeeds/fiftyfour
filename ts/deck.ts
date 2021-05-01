@@ -3,7 +3,7 @@ import { CardStub } from "./cardStub";
 import { VisibleCard } from "./visibleCard";
 
 export class Deck<T> {
-  private inDeck: T[];
+  readonly inDeck: T[];
   private dealt: T[];
 
   static pokerDeckStubs(): Card[] {

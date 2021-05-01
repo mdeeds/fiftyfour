@@ -52,7 +52,7 @@ function percentToWinTest() {
   communityCards.push(deck.pop());
 
   const startTime = Perf.now();
-  let chance = s.percentToWin(deck, hand, communityCards, 2);
+  let chance = s.percentToWin(deck.getInDeck(), hand, communityCards, 2);
   console.log(`Elapsed ms: ${Perf.now() - startTime}`);
   console.assert(chance > 0 && chance < 1, `Actual chance: ${chance}`);
 }

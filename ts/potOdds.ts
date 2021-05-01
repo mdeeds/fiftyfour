@@ -17,7 +17,7 @@ export class PotOdds implements Strategy {
   action(game: GameState): number {
     let player = game.player;
     let amountToCall = game.currentBet - player.betThisRound;
-    let probabilityToWin = this.s.percentToWin(game.deck, player.holeCards, game.communityCards, game.numPlayers);
+    let probabilityToWin = this.s.percentToWin(game.deck.getInDeck(), player.holeCards, game.communityCards, game.numPlayers);
     console.log(`${player.name} has a ${probabilityToWin * 100}% probability to win.`);
     if (probabilityToWin < this.threshold) {
       return 0;

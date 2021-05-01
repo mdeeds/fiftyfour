@@ -162,7 +162,7 @@ export class Score {
   // }
 
   public percentToWin(
-    deck: Deck<Card>,
+    deck: Array<Card>,
     playerHand: Array<Card>,
     communityCards: Array<Card>,
     numPlayers: number,
@@ -170,7 +170,7 @@ export class Score {
     numCommunityCards: number = 5,
     numPlayerCards: number = 2) {
     let numberOfCardsFromDeck = (numCommunityCards - communityCards.length) + numPlayerCards * (numPlayers - 1);
-    const c = new Choose<Card>(deck.getInDeck(), numberOfCardsFromDeck);
+    const c = new Choose<Card>(deck, numberOfCardsFromDeck);
     const deal = new Array<Card>();
     const hands: Card[][] = [];
     for (let p = 0; p < numPlayers; ++p) {
