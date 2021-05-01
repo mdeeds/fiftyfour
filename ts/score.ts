@@ -187,12 +187,9 @@ export class Score {
         tempCommunityCards.push(deal.pop());
       }
       hands[0].splice(0);
-      for (const c of playerHand) {
-        hands[0].push(c);
-      }
-      for (const c of tempCommunityCards) {
-        hands[0].push(c);
-      }
+      hands[0].push(...playerHand);
+      hands[0].push(...tempCommunityCards);
+      bestScores[0] = this.bestHand(hands[0]);
       for (let i = 1; i < numPlayers; i++) {
         hands[i].splice(0);
         hands[i].push(...tempCommunityCards);
