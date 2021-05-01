@@ -16,7 +16,7 @@ export class Steve implements Strategy {
     let player = game.player;
     let amountToCall = game.currentBet - player.betThisRound;
     if (game.phase == 'pre-flop') {
-      let probabilityToWin = this.s.percentToWin(game.deck, player.holeCards, game.communityCards, 2);
+      let probabilityToWin = this.s.percentToWin(game.deck.getInDeck(), player.holeCards, game.communityCards, 2);
       if (probabilityToWin > 0.5) {
         return amountToCall;
       }
@@ -25,7 +25,7 @@ export class Steve implements Strategy {
       }
     }
     else if (game.phase == 'flop') {
-      let probabilityToWin = this.s.percentToWin(game.deck, player.holeCards, game.communityCards, 2);
+      let probabilityToWin = this.s.percentToWin(game.deck.getInDeck(), player.holeCards, game.communityCards, 2);
       return amountToCall;
     }
     else {
