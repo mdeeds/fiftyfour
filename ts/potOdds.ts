@@ -4,9 +4,9 @@ import { Score } from "./score";
 import { GameState } from "./gameState";
 
 export class PotOdds implements Strategy {
-  s: Score;
-  threshold: number;
-  maxBet: number;
+  private s: Score;
+  private threshold: number;
+  private maxBet: number;
 
   constructor(threshold: number = 0, maxBet: number = 10) {
     this.s = new Score();
@@ -15,16 +15,15 @@ export class PotOdds implements Strategy {
   }
 
   action(game: GameState): number {
-    let player = game.player;
-    let amountToCall = game.currentBet - player.betThisRound;
-    let probabilityToWin = this.s.percentToWin(game.deck.getInDeck(), player.holeCards, game.communityCards, game.numPlayers);
-    console.log(`${player.name} has a ${probabilityToWin * 100}% probability to win.`);
+    let amountToCall = game.currentBet - game.playerBetThisRound;
+    let probabilityToWin = this.s.percentToWin(game.inDeck, game.playerHoleCards, game.communityCards, game.numPlayers);
+    console.log(`Player has a ${probabilityToWin * 100}% probability to win.`);
     if (probabilityToWin < this.threshold) {
       return 0;
     }
     else {
       var bet;
-      if (player.betThisRound > 0) {
+      if (game.playerBetThisRound > 0) {
         bet = amountToCall;
       }
       else {

@@ -1,3 +1,4 @@
 src/*.js
 src/*.js.map
 data/*.txt
+data/training/*.*

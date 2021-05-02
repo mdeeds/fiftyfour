@@ -6,6 +6,11 @@ import { StorageUtil } from "./storageUtil";
 
 const fs = require('fs');
 
+export class TrainingPair {
+  public gameState;
+  public amountWon;
+}
+
 export class Train {
 
   public model: tf.LayersModel;
@@ -14,27 +19,28 @@ export class Train {
 
   public loadTrainingData() {
     let s: Score = new Score();
-    let files = fs.readdirSync("./data/");
+    let files = fs.readdirSync("./data/training/");
     for (let file of files) {
       let name: string = file.split('.')[0];
-      let gameStates: Array<GameState> = new Array<GameState>();
-      Object.assign(gameStates, StorageUtil.loadObject(name));
-      for (let item of gameStates) {
-        let chanceToWin = s.percentToWin(item.deck.inDeck, item.player.holeCards, item.communityCards, 2);
-        let chipsInPot = item.chipsInPot;
-        let currentBet = item.currentBet;
-        let action = item.action;
+      let trainingPairs: Array<TrainingPair> = new Array<TrainingPair>();
+      Object.assign(trainingPairs, StorageUtil.loadObject("training/" + name));
+      for (let item of trainingPairs) {
+        let chanceToWin = s.percentToWin(item.gameState.inDeck, item.gameState.playerHoleCards, item.gameState.communityCards, 2);
+        let chipsInPot = item.gameState.chipsInPot;
+        let currentBet = item.gameState.currentBet;
+        let action = item.gameState.action;
+        let amountWon = item.amountWon;
 
-        this.inputs.push([chipsInPot, chanceToWin]);
-        this.outputs.push([action]);
+        this.inputs.push([chipsInPot, chanceToWin, action, currentBet]);
+        this.outputs.push([amountWon]);
       }
     }
   }
 
   public buildModel(inputSize: number, outputSize: number) {
     const input = tf.input({ shape: [inputSize] });
-    const l1 = tf.layers.dense({ units: 5 }).apply(input);
-    const l2 = tf.layers.dense({ units: 5 }).apply(l1);
+    const l1 = tf.layers.dense({ units: 5, activation: 'relu' }).apply(input);
+    const l2 = tf.layers.dense({ units: 5, activation: 'relu' }).apply(l1);
     const o = tf.layers.dense({
       units: outputSize,
     }).apply(l2) as tf.SymbolicTensor;
@@ -69,8 +75,13 @@ export class Train {
     return action;
   }
 
-  public saveModel() {
-
+  public async saveModel() {
+    //await this.model.save("file://model.h5");
+    await StorageUtil.saveObject("modelWeights", this.model.weights);
   }
 
+  public async loadModel() {
+    Object.assign(this.model.weights, StorageUtil.loadObject('modelWeights'));
+    //this.model = await tf.loadLayersModel("file://model.h5");
+  }
 }

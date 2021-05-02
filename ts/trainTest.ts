@@ -60,20 +60,31 @@ async function train4real() {
   t.buildModel(t.inputs[0].length, t.outputs[0].length);
   t.model.summary();
   const hist = await t.trainModel();
-  for (let chipsInPot = 10; chipsInPot < 1000; chipsInPot += 10) {
-    for (let toWin = 0; toWin < 1; toWin += 0.1) {
-      let action = t.getAction([chipsInPot, toWin])[0];
-      appendFileSync('function.csv', `${action},`);
-    }
-    appendFileSync('function.csv', "\n");
-  }
+  t.saveModel();
+  // for (let chipsInPot = 10; chipsInPot < 1000; chipsInPot += 10) {
+  //   for (let toWin = 0; toWin < 1; toWin += 0.1) {
+  //     let action = t.getAction([chipsInPot, toWin, 1, 1])[0];
+  //     appendFileSync('function.csv', `${action},`);
+  //   }
+  //   appendFileSync('function.csv', "\n");
+  // }
+}
+
+async function saveModelTest() {
+  var t = new Train();
+  makeTrainingData(t);
+  t.buildModel(t.inputs[0].length, t.outputs[0].length);
+  await t.saveModel();
+  t.loadModel();
+
 }
 
 async function go() {
   // loadTrainingDataTest();
-  //buildModelTest();
+  // buildModelTest();
   // await trainModelTest();
   // await getActionTest();
+  // await saveModelTest();  // this test seems to be broken.
   await train4real();
 }
 

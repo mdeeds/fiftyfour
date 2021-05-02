@@ -4,14 +4,16 @@ import { Deck } from "./deck";
 import { GamePhase } from "./holdEm";
 
 export class GameState {
-  readonly player: Player;
+  readonly playerChips: number;
+  readonly playerHoleCards: Array<Card>;
+  readonly playerBetThisRound: number;
   readonly communityCards: Array<Card> = new Array<Card>();
   readonly chipsInPot: number;
   readonly phase: GamePhase;
   readonly dealerIndex: number;
   readonly currentPlayerIndex;
   readonly currentBet;
-  readonly deck: Deck<Card>;
+  readonly inDeck: Array<Card>;
   readonly numPlayers: number;
   public action: number;
 
@@ -26,14 +28,16 @@ export class GameState {
     deck: Deck<Card>,
     numPlayers: number
   ) {
-    this.player = player;
+    this.playerChips = player.chips;
+    this.playerHoleCards = player.holeCards;
+    this.playerBetThisRound = player.betThisRound;
     this.communityCards = communityCards;
     this.chipsInPot = chipsInPot;
     this.phase = phase;
     this.dealerIndex = dealerIndex;
     this.currentPlayerIndex = currentPlayerIndex;
     this.currentBet = currentBet;
-    this.deck = deck;
+    this.inDeck = deck.getInDeck();
     this.numPlayers = numPlayers;
   }
 }

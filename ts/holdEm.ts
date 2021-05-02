@@ -4,6 +4,7 @@ import { GameState } from "./gameState";
 import { Player } from "./player";
 import { Score } from "./score";
 import { StorageUtil } from "./storageUtil";
+import { TrainingPair } from "./train";
 
 export type GamePhase = 'pre-flop' | 'flop' | 'turn' | 'river';
 
@@ -64,9 +65,13 @@ export class HoldEm {
     return this.players.length;
   }
 
-  public playRound(): Array<GameState> {
+  public playRound(){
 
-    var gameStates: Array<GameState> = new Array<GameState>();
+    let gameStates: Array<GameState> = new Array<GameState>();
+    let startingChips: Array<number> = new Array<number>();
+    for (let p of this.players){
+      startingChips.push(p.chips);
+    }
 
     this.currentPlayerIndex = this.dealerIndex;
     this.reset();
@@ -82,13 +87,23 @@ export class HoldEm {
     this.phase = 'river';
     this.dealOne();
     this.Actions(gameStates);
-    var winner: number = this.showdown();
+    let winner: number = this.showdown();
     this.nextDealer();
 
-    var winningActions = gameStates.filter(gs => gs.currentPlayerIndex === winner);
+    let winnings: Array<number> = new Array<number>();
+    for (let i=0; i< this.players.length; i++){
+      winnings.push(this.players[i].chips - startingChips[i]);
+    }
 
-    StorageUtil.saveObject(`${Math.round(Math.random() * 100000)}`, winningActions);
-    return winningActions;
+    let trainingPairs: Array<TrainingPair> = new Array<TrainingPair>();
+    for (let gs of gameStates){
+      let tp = new TrainingPair();
+      tp.gameState = gs;
+      tp.amountWon = winnings[gs.currentPlayerIndex];
+      trainingPairs.push(tp);
+    }
+
+    StorageUtil.saveObject(`./training/${Math.round(Math.random() * 100000)}`, trainingPairs);
   }
 
   private reset() {
@@ -149,7 +164,7 @@ export class HoldEm {
   }
 
   private onePlayerLeftStanding() {
-    var numberPlaying = 0;
+    let numberPlaying = 0;
     for (const p of this.players) {
       if (!p.isFolded) {
         numberPlaying++;
@@ -168,8 +183,8 @@ export class HoldEm {
     while (this.needActions > 0) {
       let p = this.players[this.currentPlayerIndex];
       if (!p.isFolded) {
-        var gs: GameState = this.getGameState();
-        var amount = p.strat.action(gs);
+        let gs: GameState = this.getGameState();
+        let amount = p.strat.action(gs);
         this.bet(amount);
         gs.action = amount;
         gameStates.push(gs);
@@ -210,8 +225,8 @@ export class HoldEm {
 
   private showdown() {
     console.log(`showdown`);
-    var s: Score = new Score();
-    var playerScores: Array<number> = new Array<number>();
+    let s: Score = new Score();
+    let playerScores: Array<number> = new Array<number>();
     for (const p of this.players) {
       let score = 0;
       if (!p.isFolded) {
