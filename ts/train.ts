@@ -14,23 +14,21 @@ export class Train {
 
   public loadTrainingData() {
     let s: Score = new Score();
-    fs.readdir("./data/", (err, files) => {
-      if (err) {
-        throw err;
+    let files = fs.readdirSync("./data/");
+    for (let file of files) {
+      let name: string = file.split('.')[0];
+      let gameStates: Array<GameState> = new Array<GameState>();
+      Object.assign(gameStates, StorageUtil.loadObject(name));
+      for (let item of gameStates) {
+        let chanceToWin = s.percentToWin(item.deck.inDeck, item.player.holeCards, item.communityCards, 2);
+        let chipsInPot = item.chipsInPot;
+        let currentBet = item.currentBet;
+        let action = item.action;
+
+        this.inputs.push([chipsInPot, chanceToWin]);
+        this.outputs.push([action]);
       }
-      files.forEach(file => {
-        let name: string = file.split('.')[0];
-        let gameStates: Array<GameState> = new Array<GameState>();
-        Object.assign(gameStates, StorageUtil.loadObject(name));
-        for (let item of gameStates) {
-          let chanceToWin = s.percentToWin(item.deck.inDeck, item.player.holeCards, item.communityCards, item.numPlayers);
-          let chipsInPot = item.chipsInPot;
-          let action = item.action;
-          this.inputs.push([chipsInPot]);
-          this.outputs.push([action]);
-        }
-      });
-    });
+    }
   }
 
   public buildModel(inputSize: number, outputSize: number) {
@@ -41,5 +39,38 @@ export class Train {
       units: outputSize,
     }).apply(l2) as tf.SymbolicTensor;
     this.model = tf.model({ inputs: input, outputs: o });
+
+    let opt = tf.train.adam(0.1);
+
+    this.model.compile({
+      optimizer: opt, loss: tf.losses.meanSquaredError,
+      metrics: ['accuracy']
+    });
   }
+
+  public trainModel(): Promise<tf.History> {
+    let inputTensor = tf.tensor2d(this.inputs);
+    let outputTensor = tf.tensor2d(this.outputs);
+
+    return this.model.fit(inputTensor, outputTensor,
+      {
+        epochs: 100,
+        shuffle: true,
+        //verbose: 1,
+        //batchSize: batchSize,
+        //sampleWeight: weightTensor
+      })
+  }
+
+  public getAction(inputs: Array<number>) {
+    let inputTensor = tf.tensor([inputs]);
+    let outputs: tf.Tensor = this.model.predict(inputTensor) as tf.Tensor;
+    let action = outputs.dataSync();
+    return action;
+  }
+
+  public saveModel() {
+
+  }
+
 }
