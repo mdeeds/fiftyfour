@@ -2,8 +2,6 @@ import { Card } from "./card";
 import { Deck } from "./deck";
 import { Choose } from "./choose";
 import { Perf } from "./perf";
-import { StorageUtil } from "./storageUtil";
-import { nextTick } from "node:process";
 
 class ScoreNode {
   private children: ScoreNode[] = [];
@@ -164,41 +162,43 @@ export class Score {
   // }
 
   public percentToWin(
-      deck: Array<Card>, 
-      playerHand: Array<Card>, 
-      communityCards: Array<Card>, 
-      numPlayers: number, 
-      timeout: number = 10000, 
-      numCommunityCards:number = 5, 
-      numPlayerCards:number=2) 
-    {
+    deck: Array<Card>,
+    playerHand: Array<Card>,
+    communityCards: Array<Card>,
+    numPlayers: number,
+    timeout: number = 10000,
+    numCommunityCards: number = 5,
+    numPlayerCards: number = 2) {
     let numberOfCardsFromDeck = (numCommunityCards - communityCards.length) + numPlayerCards * (numPlayers - 1);
     const c = new Choose<Card>(deck, numberOfCardsFromDeck);
     const deal = new Array<Card>();
-    const hands = new Array<Array<Card>>();
-    var wins = 0;
-    var count = 0;
+    const hands: Card[][] = [];
+    for (let p = 0; p < numPlayers; ++p) {
+      hands.push([]);
+    }
+    const bestScores: number[] = [];
+    let wins = 0;
+    let count = 0;
     const startTime = Perf.now();
+    const tempCommunityCards: Card[] = [];
     while (!c.isDone()) {
       c.next(deal);
-      let tempCommunityCards = [...communityCards]
+      tempCommunityCards.splice(0);
+      tempCommunityCards.push(...communityCards);
       while (tempCommunityCards.length < numCommunityCards) {
         tempCommunityCards.push(deal.pop());
       }
-      let tempHand = playerHand.concat(tempCommunityCards);
-      hands[0] = tempHand
+      hands[0].splice(0);
+      hands[0].push(...playerHand);
+      hands[0].push(...tempCommunityCards);
+      bestScores[0] = this.bestHand(hands[0]);
       for (let i = 1; i < numPlayers; i++) {
-        let tempHand = [...tempCommunityCards];
-        for(let j=0; j<numPlayerCards; j++){
-          tempHand.push(deal.pop());
-        }
-        hands[i] = tempHand;
+        hands[i].splice(0);
+        hands[i].push(...tempCommunityCards);
+        hands[i].push(deal.pop());
+        hands[i].push(deal.pop());
+        bestScores[i] = this.bestHand(hands[i]);
       }
-      let bestScores: Array<number> = new Array<number>();
-      hands.forEach(h => {
-
-        bestScores.push(this.bestHand(h));
-      });
       if (bestScores[0] == Math.max(...bestScores)) {
         wins++;
       }
