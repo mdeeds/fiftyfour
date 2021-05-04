@@ -1,6 +1,6 @@
 import { Strategy } from "./strategy";
-import { GameState } from "./gameState";
-import { Score } from "./score";
+import { GameState } from "../gameState";
+import { Score } from "../score";
 
 export class BigAce implements Strategy {
   action(game: GameState): number {

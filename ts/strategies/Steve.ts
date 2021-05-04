@@ -1,7 +1,7 @@
 import { Strategy } from "./strategy";
-import { Score } from "./score";
-import { GameState } from "./gameState";
-import { GamePhase } from "./holdEm";
+import { Score } from "../score";
+import { GameState } from "../gameState";
+import { GamePhase } from "../holdEm";
 
 export class Steve implements Strategy {
   s: Score;

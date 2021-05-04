@@ -1,5 +1,5 @@
 import { Card } from "./card";
-import { Strategy } from "./strategy";
+import { Strategy } from "./strategies/strategy";
 
 export class Player {
   static createNewPlayers(numberOfPlayers: number) {

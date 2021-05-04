@@ -6,7 +6,12 @@ import { Score } from "./score";
 import { StorageUtil } from "./storageUtil";
 import { TrainingPair } from "./train";
 
-export type GamePhase = 'pre-flop' | 'flop' | 'turn' | 'river';
+export enum GamePhase{
+  preflop = "pre-flop",
+  flop = "flop",
+  turn = "turn",
+  river = "river",
+}
 
 export class HoldEm {
   readonly players: Array<Player> = new Array<Player>();
@@ -25,7 +30,7 @@ export class HoldEm {
     this.dealerIndex = 0;
     this.currentPlayerIndex = 1;
     this.chipsInPot = 0;
-    this.phase = 'pre-flop';
+    this.phase = GamePhase.preflop
     this.currentBet = 0;
     this.players = players;
     this.needActions = players.length;
@@ -75,16 +80,16 @@ export class HoldEm {
 
     this.currentPlayerIndex = this.dealerIndex;
     this.reset();
-    this.phase = 'pre-flop';
+    this.phase = GamePhase.preflop;
     this.dealHoleCards();
     this.Actions(gameStates);
-    this.phase = 'flop';
+    this.phase = GamePhase.flop;
     this.dealFlop();
     this.Actions(gameStates);
-    this.phase = 'turn';
+    this.phase = GamePhase.turn;
     this.dealOne();
     this.Actions(gameStates);
-    this.phase = 'river';
+    this.phase = GamePhase.river;
     this.dealOne();
     this.Actions(gameStates);
     let winner: number = this.showdown();

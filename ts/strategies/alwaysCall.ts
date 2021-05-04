@@ -1,6 +1,6 @@
 import { Strategy } from "./strategy";
-import { HoldEm } from "./holdEm";
-import { GameState } from "./gameState";
+import { HoldEm } from "../holdEm";
+import { GameState } from "../gameState";
 
 export class AlwaysCall implements Strategy {
   action(game: GameState): number {

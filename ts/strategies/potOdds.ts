@@ -1,7 +1,7 @@
 import { Strategy } from "./strategy";
-import { HoldEm } from "./holdEm";
-import { Score } from "./score";
-import { GameState } from "./gameState";
+import { HoldEm } from "../holdEm";
+import { Score } from "../score";
+import { GameState } from "../gameState";
 
 export class PotOdds implements Strategy {
   private s: Score;

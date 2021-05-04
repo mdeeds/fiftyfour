@@ -1,5 +1,5 @@
 import { Strategy } from "./strategy";
-import { GameState } from "./gameState";
+import { GameState } from "../gameState";
 
 export class AlwaysBet implements Strategy {
   action(game: GameState): number {

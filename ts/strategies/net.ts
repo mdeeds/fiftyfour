@@ -1,14 +1,16 @@
 import { Strategy } from "./strategy";
-import { Score } from "./score";
-import { GameState } from "./gameState";
-import { GamePhase } from "./holdEm";
-import { Train } from "./train";
+import { Score } from "../score";
+import { GameState } from "../gameState";
+import { GamePhase } from "../holdEm";
+import { Train, TrainingPair } from "../train";
 
 export class Net implements Strategy {
   s: Score;
   t: Train;
+  maxBet: number;
 
-  constructor(maxBet: number = 10) {
+  constructor(maxBet: number = 20) {
+    this.maxBet = maxBet;
     this.s = new Score();
     this.t = new Train();
     this.t.buildModel(4, 1);
@@ -16,13 +18,13 @@ export class Net implements Strategy {
   }
 
   action(game: GameState): number {
-    let chanceToWin = this.s.percentToWin(game.inDeck, game.playerHoleCards, game.communityCards, 2);
-    let chipsInPot = game.chipsInPot;
-    let currentBet = game.currentBet;
+    let tp: TrainingPair = new TrainingPair();
+    tp.gameState = game;
 
     let predictedWinnings: Array<number> = new Array<number>();
-    for (let bet = 0; bet < 20; bet++) {
-      let input = [chipsInPot, chanceToWin, bet, currentBet];
+    for (let bet = 0; bet < this.maxBet; bet++) {
+      tp.gameState.action = bet;
+      let input = tp.getInput();
       predictedWinnings.push(this.t.getAction(input)[0]);
     }
     let index = predictedWinnings.indexOf(Math.max(...predictedWinnings));

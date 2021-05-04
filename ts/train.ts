@@ -1,14 +1,34 @@
 import * as tf from '@tensorflow/tfjs';
 import { arraysEqual } from '@tensorflow/tfjs-core/dist/util_base';
 import { GameState } from './gameState';
+import { GamePhase } from './holdEm';
 import { Score } from './score';
 import { StorageUtil } from "./storageUtil";
 
 const fs = require('fs');
 
 export class TrainingPair {
-  public gameState;
-  public amountWon;
+  public gameState: GameState;
+  public amountWon: number;
+  private chanceToWin: number = -1;
+
+  private static s: Score = new Score();
+
+  public getInput() {
+    let chipsInPot = this.gameState.chipsInPot;
+    if (this.chanceToWin < 0) {
+      this.chanceToWin = TrainingPair.s.percentToWin(this.gameState.inDeck, this.gameState.playerHoleCards, this.gameState.communityCards, 2);
+    }
+    let action = this.gameState.action;
+    let currentBet = this.gameState.currentBet;
+
+    return [chipsInPot / 100, this.chanceToWin, action / 10, currentBet / 10];
+  }
+
+  public fromTrainingPair(tp: TrainingPair) {
+    this.gameState = tp.gameState;
+    this.amountWon = tp.amountWon;
+  }
 }
 
 export class Train {
@@ -25,14 +45,10 @@ export class Train {
       let trainingPairs: Array<TrainingPair> = new Array<TrainingPair>();
       Object.assign(trainingPairs, StorageUtil.loadObject("training/" + name));
       for (let item of trainingPairs) {
-        let chanceToWin = s.percentToWin(item.gameState.inDeck, item.gameState.playerHoleCards, item.gameState.communityCards, 2);
-        let chipsInPot = item.gameState.chipsInPot;
-        let currentBet = item.gameState.currentBet;
-        let action = item.gameState.action;
-        let amountWon = item.amountWon;
-
-        this.inputs.push([chipsInPot, chanceToWin, action, currentBet]);
-        this.outputs.push([amountWon]);
+        let tp: TrainingPair = new TrainingPair();
+        tp.fromTrainingPair(item);
+        this.inputs.push(tp.getInput());
+        this.outputs.push([tp.amountWon]);
       }
     }
   }
@@ -46,7 +62,7 @@ export class Train {
     }).apply(l2) as tf.SymbolicTensor;
     this.model = tf.model({ inputs: input, outputs: o });
 
-    let opt = tf.train.adam(0.1);
+    let opt = tf.train.adam(1);
 
     this.model.compile({
       optimizer: opt, loss: tf.losses.meanSquaredError,
