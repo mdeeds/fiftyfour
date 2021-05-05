@@ -188,6 +188,7 @@ export class HoldEm {
     while (this.needActions > 0) {
       let p = this.players[this.currentPlayerIndex];
       if (!p.isFolded) {
+        // the stratagy may be more interested in the number of players that have not folded.
         let gs: GameState = this.getGameState();
         let amount = p.strat.action(gs);
         this.bet(amount);

@@ -1,6 +1,7 @@
 import { Train } from "./train";
 import { Perf } from "./perf";
 import { appendFileSync } from "fs";
+import { InputSpec } from "@tensorflow/tfjs-layers";
 
 function loadTrainingDataTest() {
   var t = new Train();
@@ -10,13 +11,28 @@ function loadTrainingDataTest() {
   console.assert(t.inputs.length > 0, `Actual: ${t.inputs.length}`);
   console.assert(t.outputs.length > 0, `Actual: ${t.outputs.length}`);
   console.assert(t.outputs.length == t.inputs.length);
+
+  for (let i = 0; i < t.inputs.length; i++) {
+    let input = t.inputs[i];
+    let output = t.outputs[i];
+    let data: string = "";
+    for (let item of input) {
+      data += `${item},`;
+    }
+    for (let item of output) {
+      data += `${item},`;
+    }
+    data += '\n';
+    appendFileSync('trainging_data.csv', data);
+  }
+
 }
 
 function makeTrainingData(t: Train) {
   for (let i = 0; i < 10; i++) {
-    t.inputs.push([1]);
+    t.inputs.push([1, 1]);
     t.outputs.push([1]);
-    t.inputs.push([2]);
+    t.inputs.push([2, 2]);
     t.outputs.push([2]);
   }
 }
@@ -46,8 +62,8 @@ async function getActionTest() {
   t.buildModel(t.inputs[0].length, t.outputs[0].length);
   const hist = await t.trainModel();
   const startTime = Perf.now();
-  let Action1 = t.getAction([1])[0];
-  let Action2 = t.getAction([2])[0];
+  let Action1 = t.getAction([1, 1])[0];
+  let Action2 = t.getAction([2, 2])[0];
   console.log(`getActionTest Elapsed ms: ${Perf.now() - startTime}`);
   console.assert(Action1 > 0.9 && Action1 < 1.1, `Expected 1 got ${Action1}`);
   console.assert(Action2 > 1.9 && Action1 < 2.1, `Expected 2 got ${Action2}`);
@@ -80,10 +96,10 @@ async function saveModelTest() {
 }
 
 async function go() {
-  // loadTrainingDataTest();
-  // buildModelTest();
-  // await trainModelTest();
-  // await getActionTest();
+  //loadTrainingDataTest();
+  //buildModelTest();
+  //await trainModelTest();
+  //await getActionTest();
   // await saveModelTest();  // this test seems to be broken.
   await train4real();
 }

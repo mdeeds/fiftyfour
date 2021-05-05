@@ -15,6 +15,7 @@ export class GameState {
   readonly currentBet;
   readonly inDeck: Array<Card>;
   readonly numPlayers: number;
+  readonly numNotFolded: number;
   public action: number;
 
   constructor(

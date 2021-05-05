@@ -1,4 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
+import { Tensor } from '@tensorflow/tfjs';
 import { arraysEqual } from '@tensorflow/tfjs-core/dist/util_base';
 import { GameState } from './gameState';
 import { GamePhase } from './holdEm';
@@ -21,14 +22,61 @@ export class TrainingPair {
     }
     let action = this.gameState.action;
     let currentBet = this.gameState.currentBet;
+    let playerBetThisRound = this.gameState.playerBetThisRound;
 
-    return [chipsInPot / 100, this.chanceToWin, action / 10, currentBet / 10];
+    //return [chipsInPot / 100, this.chanceToWin, action / 10, currentBet / 10];
+    //return [chipsInPot / 100, this.chanceToWin];
+    return [chipsInPot / 10, this.chanceToWin, chipsInPot * this.chanceToWin, playerBetThisRound / 10, currentBet / 10];
   }
 
   public fromTrainingPair(tp: TrainingPair) {
     this.gameState = tp.gameState;
     this.amountWon = tp.amountWon;
   }
+}
+
+class LogLayer extends tf.layers.Layer {
+  constructor() {
+    super({});
+  }
+  // In this case, the output is a scalar.
+  computeOutputShape(inputShape) { return inputShape; }
+
+  // call() is where we do the computation.
+  call(input: Array<Tensor>, kwargs) {
+    let retVal = [];
+    for (let item of input) {
+      retVal.push(item.log())
+    }
+    return retVal;
+  }
+
+  // Every layer needs a unique name.
+  getClassName() { return 'Log'; }
+
+  //get_config() { return }
+}
+
+class ExpLayer extends tf.layers.Layer {
+  constructor() {
+    super({});
+  }
+  // In this case, the output is a scalar.
+  computeOutputShape(inputShape) { return inputShape; }
+
+  // call() is where we do the computation.
+  call(input, kwargs) {
+    let retVal = [];
+    for (let item of input) {
+      retVal.push(item.exp())
+    }
+    return retVal;
+  }
+
+  // Every layer needs a unique name.
+  getClassName() { return 'Exp'; }
+
+  //get_config() { return }
 }
 
 export class Train {
@@ -48,21 +96,29 @@ export class Train {
         let tp: TrainingPair = new TrainingPair();
         tp.fromTrainingPair(item);
         this.inputs.push(tp.getInput());
-        this.outputs.push([tp.amountWon]);
+        //this.outputs.push([tp.amountWon]);
+        this.outputs.push([tp.gameState.action]);
       }
     }
   }
 
   public buildModel(inputSize: number, outputSize: number) {
     const input = tf.input({ shape: [inputSize] });
+    // linear dense layers
     const l1 = tf.layers.dense({ units: 5, activation: 'relu' }).apply(input);
-    const l2 = tf.layers.dense({ units: 5, activation: 'relu' }).apply(l1);
-    const o = tf.layers.dense({
-      units: outputSize,
-    }).apply(l2) as tf.SymbolicTensor;
+    const l2 = tf.layers.dense({ units: 5, activation: 'relu' }).apply(l1) as tf.SymbolicTensor;
+    // // log dense layers
+    // const loglayer = new LogLayer().apply(input);
+    // const ll1 = tf.layers.dense({ units: 5, activation: 'relu' }).apply(loglayer);
+    // const ll2 = tf.layers.dense({ units: 5, activation: 'relu' }).apply(ll1);
+    // const expLayer = new ExpLayer().apply(ll2) as tf.SymbolicTensor;
+    // // concat and output
+    // const contcatLayer = tf.layers.concatenate().apply([l2, expLayer]);
+    const o = tf.layers.dense({ units: outputSize }).apply(l2) as tf.SymbolicTensor;
+
     this.model = tf.model({ inputs: input, outputs: o });
 
-    let opt = tf.train.adam(1);
+    let opt = tf.train.adam(0.01);
 
     this.model.compile({
       optimizer: opt, loss: tf.losses.meanSquaredError,
@@ -79,7 +135,7 @@ export class Train {
         epochs: 100,
         shuffle: true,
         //verbose: 1,
-        //batchSize: batchSize,
+        batchSize: 32,
         //sampleWeight: weightTensor
       })
   }

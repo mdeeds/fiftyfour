@@ -13,7 +13,7 @@ export class Net implements Strategy {
     this.maxBet = maxBet;
     this.s = new Score();
     this.t = new Train();
-    this.t.buildModel(4, 1);
+    this.t.buildModel(5, 1);
     this.t.loadModel();
   }
 
@@ -21,14 +21,16 @@ export class Net implements Strategy {
     let tp: TrainingPair = new TrainingPair();
     tp.gameState = game;
 
-    let predictedWinnings: Array<number> = new Array<number>();
-    for (let bet = 0; bet < this.maxBet; bet++) {
-      tp.gameState.action = bet;
-      let input = tp.getInput();
-      predictedWinnings.push(this.t.getAction(input)[0]);
-    }
-    let index = predictedWinnings.indexOf(Math.max(...predictedWinnings));
-    let bet = index;
+    // let predictedWinnings: Array<number> = new Array<number>();
+    // for (let bet = 0; bet < this.maxBet; bet++) {
+    //   tp.gameState.action = bet;
+    //   let input = tp.getInput();
+    //   predictedWinnings.push(this.t.getAction(input)[0]);
+    // }
+    // let index = predictedWinnings.indexOf(Math.max(...predictedWinnings));
+    // let bet = index;
+
+    let bet = this.t.getAction(tp.getInput())[0];
 
     return bet;
   }
